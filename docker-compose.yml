@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+    api:
+        build: .
+        container_name: booksapi
+        restart: always
+        ports:
+            - '8080:80'
