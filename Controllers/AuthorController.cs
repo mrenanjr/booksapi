@@ -33,7 +33,11 @@ namespace booksapi.Controllers
         {
             if(ModelState.IsValid)
             {
-                context.Authors.Add(model);
+                var author = context.Authors.AsNoTracking().FirstOrDefaultAsync(f => f.Id == model.Id);
+
+                if(author != null) context.Authors.Update(model);
+                else context.Authors.Add(model);
+
                 await context.SaveChangesAsync();
                 return model;
             }

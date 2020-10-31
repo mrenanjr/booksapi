@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using booksapi.Data;
 using booksapi.Models;
@@ -28,12 +27,34 @@ namespace booksapi.Controllers
             return book;
         }
 
+        [HttpDelete]
+        [Route("{id:int}")]
+        public async Task<ActionResult<Book>> DeleteById([FromServices] DataContext context, int id)
+        {
+            context.Books.Remove(new Book() { Id = id });
+            await context.SaveChangesAsync();
+            return Ok();
+        }
         [HttpPost]
         public async Task<ActionResult<Book>> Post([FromServices] DataContext context, [FromBody] Book model)
         {
             if(ModelState.IsValid)
             {
-                context.Books.Add(model);
+                var book = await context.Books.AsNoTracking().FirstOrDefaultAsync(f => f.Id == model.Id);
+
+                if(book != null) context.Books.Update(model);
+                else {
+                    book = await context.Books.AsNoTracking().FirstOrDefaultAsync(f =>
+                        f.Title.Equals(model.Title) &&
+                        f.Year.Equals(model.Year) &&
+                        f.AuthorId.Equals(model.AuthorId)
+                    );
+
+                    if(book != null) return StatusCode(403, "Dados já existem na base!");
+
+                    context.Books.Add(model);
+                }
+
                 await context.SaveChangesAsync();
                 return model;
             }
